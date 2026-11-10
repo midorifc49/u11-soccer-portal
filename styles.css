@@ -1342,8 +1342,23 @@ a:hover {
     }
     
     .top-header {
-        padding: 0 20px;
-        height: 70px;
+        padding: 12px 16px;
+        min-height: 64px;
+        height: auto;
+    }
+
+    .header-left h1 {
+        font-size: 1.15rem;
+        white-space: nowrap;
+    }
+
+    .header-subtitle {
+        font-size: 0.75rem;
+        white-space: nowrap;
+    }
+
+    .header-right {
+        display: none;
     }
     
     .views-container {

@@ -1030,12 +1030,14 @@ const ui = {
                         <span class="hero-meta-item"><i class="ph ph-map-pin"></i> ${latestVideo.location}</span>
                         <span class="category-badge badge-${cat.color}">${cat.name}</span>
                     </div>
-                    <button class="btn btn-primary btn-lg" onclick="playYouTubeVideo('${latestVideo.url}')">
-                        <i class="ph-fill ph-play"></i> YouTubeで再生する
-                    </button>
-                    <button class="btn btn-secondary btn-lg" style="margin-left: 12px;" onclick="ui.openDetailModal('${latestVideo.id}')">
-                        <i class="ph ph-info"></i> 詳細を見る
-                    </button>
+                    <div class="hero-actions" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        <button class="btn btn-primary btn-lg" onclick="playYouTubeVideo('${latestVideo.url}')">
+                            <i class="ph-fill ph-play"></i> YouTubeで再生する
+                        </button>
+                        <button class="btn btn-secondary btn-lg" onclick="ui.openDetailModal('${latestVideo.id}')">
+                            <i class="ph ph-info"></i> 詳細を見る
+                        </button>
+                    </div>
                 </div>
                 <div class="hero-thumbnail-wrapper" onclick="playYouTubeVideo('${latestVideo.url}')">
                     <img src="${latestVideo.thumbnail}" alt="${latestVideo.title}">
