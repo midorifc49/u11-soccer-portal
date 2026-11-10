@@ -1,15 +1,11 @@
-// Global Error Boundary to catch any unhandled exceptions and display them clearly
+// Global Error Boundary (logs to console without intrusive alerts on mobile/iOS)
 window.onerror = function (message, source, lineno, colno, error) {
-    const errorMsg = `[Unhandled Error] ${message} at ${source}:${lineno}:${colno}`;
-    console.error(errorMsg, error);
-    alert(`エラーが発生しました:\n${message}\n場所: ${source}:${lineno}:${lineno}`);
+    console.warn(`[Error] ${message} at ${source}:${lineno}:${colno}`, error);
     return false;
 };
 
 window.onunhandledrejection = function (event) {
-    const reason = event.reason ? (event.reason.message || event.reason) : 'Unknown reason';
-    console.error("[Unhandled Promise Rejection]", event.reason);
-    alert(`非同期処理エラー:\n${reason}`);
+    console.warn("[Unhandled Promise Rejection]", event.reason);
 };
 
 // Global State
@@ -473,13 +469,13 @@ const ui = {
         if (!isLocalAdminEnv()) {
             document.body.classList.add('public-mode');
             const adminNavItem = document.querySelector('.nav-item[data-view="admin"]');
-            if (adminNavItem) adminNavItem.remove();
+            if (adminNavItem) adminNavItem.style.display = 'none';
             const navFooter = document.querySelector('.nav-footer');
-            if (navFooter) navFooter.remove();
+            if (navFooter) navFooter.style.display = 'none';
             const adminView = document.getElementById('admin-view');
-            if (adminView) adminView.remove();
+            if (adminView) adminView.style.display = 'none';
             const editModal = document.getElementById('video-edit-modal');
-            if (editModal) editModal.remove();
+            if (editModal) editModal.style.display = 'none';
         }
     },
     
