@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>緑FC 49期 5年</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- SheetJS (Excel parser) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation (Responsive) -->
+        <nav class="navigation">
+            <div class="nav-brand">
+                <i class="ph-fill ph-video-camera text-primary animate-pulse"></i>
+                <span style="font-size: 1.15rem; white-space: nowrap;">緑FC 49期 5年</span>
+            </div>
+            <ul class="nav-links">
+                <li class="nav-item active" data-view="portal">
+                    <a href="#" class="nav-link">
+                        <i class="ph ph-squares-four"></i>
+                        <span>ポータル</span>
+                    </a>
+                </li>
+                <li class="nav-item" data-view="admin">
+                    <a href="#" class="nav-link">
+                        <i class="ph ph-gear"></i>
+                        <span>管理画面</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="nav-footer">
+                <div class="db-status-badge offline" id="db-status-badge">
+                    <i class="ph-fill ph-circle"></i>
+                    <span id="db-status-text">ローカルモード</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <h1 id="page-title">緑FC 49期 5年</h1>
+                    <p class="text-secondary text-sm header-subtitle" id="page-subtitle">アーカイブ動画の一覧</p>
+                </div>
+                <div class="header-right">
+                    <div class="clock-display" id="clock-display">2026.07.19</div>
+                </div>
+            </header>
+
+            <!-- Views Container -->
+            <div class="views-container">
+                
+                <!-- Portal View -->
+                <section id="portal-view" class="view active">
+                    <!-- Hero Highlight Section (Shows latest video) -->
+                    <div class="hero-section" id="hero-section">
+                        <!-- Dynamic content loaded via JS -->
+                        <div class="hero-placeholder">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+
+                    <!-- Search & Filter Controls -->
+                    <div class="filters-bar">
+                        <div class="search-input-wrapper">
+                            <i class="ph ph-magnifying-glass"></i>
+                            <input type="text" id="video-search" placeholder="動画タイトル、対戦相手、場所、キーワードで検索...">
+                        </div>
+                        <div class="filter-actions">
+                            <select class="filter-select" id="sort-select">
+                                <option value="date-desc">日付の新しい順</option>
+                                <option value="date-asc">日付の古い順</option>
+                                <option value="title-asc">五十音順 (A-Z)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Category Tab Bar -->
+                    <div class="category-tabs-wrapper">
+                        <div class="category-tabs" id="portal-category-tabs">
+                            <!-- Categories will be generated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Videos Section -->
+                    <div id="portal-videos-content">
+                        <!-- Grouped by Category View or Grid View -->
+                        <div class="video-grid" id="all-videos-grid">
+                            <!-- Video cards will be rendered here -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Admin View -->
+                <section id="admin-view" class="view">
+                    <!-- Admin Tab Navigation -->
+                    <div class="admin-nav">
+                        <button class="admin-tab-btn active" data-target="admin-videos">
+                            <i class="ph ph-video"></i> 動画一覧・編集
+                        </button>
+                        <button class="admin-tab-btn" data-target="admin-add-video">
+                            <i class="ph ph-plus-circle"></i> 新規動画追加
+                        </button>
+                        <button class="admin-tab-btn" data-target="admin-bulk-import">
+                            <i class="ph ph-file-xls"></i> Excel/CSV一括登録
+                        </button>
+                        <button class="admin-tab-btn" data-target="admin-categories">
+                            <i class="ph ph-tag"></i> カテゴリ管理
+                        </button>
+                        <button class="admin-tab-btn" data-target="admin-settings">
+                            <i class="ph ph-database"></i> 接続設定
+                        </button>
+                    </div>
+
+                    <!-- Video Management (List / Edit Table) -->
+                    <div id="admin-videos" class="admin-tab-content active">
+                        <div class="admin-card">
+                            <div class="card-header">
+                                <h3>登録済み動画一覧</h3>
+                                <div class="search-input-wrapper sm">
+                                    <i class="ph ph-magnifying-glass"></i>
+                                    <input type="text" id="admin-video-search" placeholder="動画を検索...">
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>サムネイル</th>
+                                            <th>タイトル</th>
+                                            <th>カテゴリ</th>
+                                            <th>日付 / 情報</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-videos-table-body">
+                                        <!-- Dynamic contents -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add Video Form -->
+                    <div id="admin-add-video" class="admin-tab-content">
+                        <div class="admin-card">
+                            <div class="card-header">
+                                <h3>新規動画の登録</h3>
+                            </div>
+                            <form id="add-video-form" class="admin-form">
+                                <div class="form-group url-group">
+                                    <label class="form-label" for="video-url">YouTube URL <span class="required">*</span></label>
+                                    <div class="input-with-btn">
+                                        <input type="url" id="video-url" class="form-control" placeholder="https://www.youtube.com/watch?v=... または https://youtu.be/..." required>
+                                        <button type="button" class="btn btn-secondary" id="btn-fetch-meta">
+                                            <i class="ph ph-download-simple"></i> 情報取得
+                                        </button>
+                                    </div>
+                                    <p class="form-hint">YouTube動画のURL（限定公開URLも可）を入力し、「情報取得」を押すとタイトルとサムネイルが自動設定されます。</p>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label" for="video-title">タイトル <span class="required">*</span></label>
+                                        <input type="text" id="video-title" class="form-control" placeholder="動画のタイトル" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" for="video-category">カテゴリ <span class="required">*</span></label>
+                                        <select id="video-category" class="form-control" required>
+                                            <!-- Dynamic Categories -->
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label" for="video-date">日付 <span class="required">*</span></label>
+                                        <input type="date" id="video-date" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" for="video-opponent">対戦相手 / 関連団体</label>
+                                        <input type="text" id="video-opponent" class="form-control" placeholder="例: 東西高校、〇〇クラブ">
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label" for="video-location">場所</label>
+                                        <input type="text" id="video-location" class="form-control" placeholder="例: 第一体育館、メインアリーナ">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" for="video-thumbnail-preview">サムネイル画像URL</label>
+                                        <input type="url" id="video-thumbnail-url" class="form-control" placeholder="自動取得されます（手動指定も可）">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label" for="video-notes">備考・メモ</label>
+                                    <textarea id="video-notes" class="form-control" rows="4" placeholder="見どころ、振り返りのポイント、戦術メモなど"></textarea>
+                                </div>
+
+                                <div class="thumbnail-preview-box" id="add-thumbnail-preview-box">
+                                    <p class="text-secondary text-sm">サムネイルプレビュー</p>
+                                    <img src="" id="add-video-thumb-preview" alt="Preview" style="display:none; max-width: 320px; border-radius: var(--radius-md); margin-top: 8px;">
+                                </div>
+
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="ph ph-floppy-disk"></i> アーカイブに追加
+                                    </button>
+                                    <button type="reset" class="btn btn-ghost" id="add-form-reset">リセット</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Excel/CSV Bulk Import -->
+                    <div id="admin-bulk-import" class="admin-tab-content">
+                        <div class="admin-card">
+                            <div class="card-header">
+                                <h3>Excel / CSV 一括登録</h3>
+                                <button type="button" class="btn btn-secondary btn-sm" id="btn-download-template">
+                                    <i class="ph ph-file-arrow-down"></i> テンプレートダウンロード
+                                </button>
+                            </div>
+                            <div class="settings-section" style="border:none; padding-bottom:0;">
+                                <p class="text-secondary text-sm">
+                                    複数のYouTube URLを記載したExcelファイル（.xlsx / .xls）またはCSVファイル（.csv）をアップロードして、一括登録できます。<br>
+                                    ファイルがアップロードされると、システムが自動的にYouTubeからタイトルやサムネイル情報を順次取得します。
+                                </p>
+                                
+                                <div class="form-group mt-4">
+                                    <label class="form-label" for="bulk-file-input">インポートファイルを選択</label>
+                                    <input type="file" id="bulk-file-input" class="form-control" accept=".xlsx, .xls, .csv">
+                                </div>
+
+                                <!-- Progress Indicator -->
+                                <div class="bulk-progress-container mt-4" id="bulk-progress-container" style="display:none;">
+                                    <div class="progress-header" style="display:flex; justify-content:space-between; font-weight:600; font-size:0.85rem; margin-bottom:6px;">
+                                        <span id="bulk-progress-status" class="text-primary">YouTube情報取得中... (0/0)</span>
+                                        <span id="bulk-progress-percentage" class="text-primary">0%</span>
+                                    </div>
+                                    <div class="progress-bar-bg" style="width:100%; height:8px; background:var(--bg-elevated); border-radius:4px; overflow:hidden;">
+                                        <div class="progress-bar-fill" id="bulk-progress-bar-fill" style="width: 0%; height:100%; background:var(--primary-color); transition: width 0.25s;"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Preview Table of parsed/fetched videos -->
+                                <div class="bulk-preview-section mt-6" id="bulk-preview-section" style="display:none;">
+                                    <h4 style="font-size:1.05rem; margin-bottom:4px;">インポート対象プレビュー</h4>
+                                    <p class="text-secondary text-xs">※内容を確認し、「インポートを実行する」ボタンを押すと登録が確定します。タイトルやその他の情報は登録後に個別編集できます。</p>
+                                    <div class="table-responsive mt-2" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+                                        <table class="admin-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>サムネイル</th>
+                                                    <th>タイトル (自動取得/修正可)</th>
+                                                    <th>日付</th>
+                                                    <th>カテゴリ</th>
+                                                    <th>対戦相手</th>
+                                                    <th>場所</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="bulk-preview-table-body">
+                                                <!-- Preview rows -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="form-actions mt-4">
+                                        <button class="btn btn-primary" id="btn-execute-bulk-import">
+                                            <i class="ph ph-check-square"></i> <span id="btn-execute-bulk-text">インポートを実行する</span>
+                                        </button>
+                                        <button class="btn btn-ghost" id="btn-cancel-bulk-import">キャンセル</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Category Management -->
+                    <div id="admin-categories" class="admin-tab-content">
+                        <div class="admin-grid-two-cols">
+                            <!-- Category Add Form -->
+                            <div class="admin-card">
+                                <div class="card-header">
+                                    <h3 id="category-form-title">新規カテゴリの追加</h3>
+                                </div>
+                                <form id="add-category-form" class="admin-form">
+                                    <input type="hidden" id="edit-category-id">
+                                    <div class="form-group">
+                                        <label class="form-label" for="category-name">カテゴリ名 <span class="required">*</span></label>
+                                        <input type="text" id="category-name" class="form-control" placeholder="例: 公式戦, 練習試合, ハイライト" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">バッジカラー選択 <span class="required">*</span></label>
+                                        <div class="color-presets">
+                                            <label class="color-preset-label">
+                                                <input type="radio" name="category-color" value="emerald" checked>
+                                                <span class="color-badge bg-emerald">Emerald</span>
+                                            </label>
+                                            <label class="color-preset-label">
+                                                <input type="radio" name="category-color" value="blue">
+                                                <span class="color-badge bg-blue">Blue</span>
+                                            </label>
+                                            <label class="color-preset-label">
+                                                <input type="radio" name="category-color" value="purple">
+                                                <span class="color-badge bg-purple">Purple</span>
+                                            </label>
+                                            <label class="color-preset-label">
+                                                <input type="radio" name="category-color" value="amber">
+                                                <span class="color-badge bg-amber">Amber</span>
+                                            </label>
+                                            <label class="color-preset-label">
+                                                <input type="radio" name="category-color" value="rose">
+                                                <span class="color-badge bg-rose">Rose</span>
+                                            </label>
+                                            <label class="color-preset-label">
+                                                <input type="radio" name="category-color" value="slate">
+                                                <span class="color-badge bg-slate">Slate</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="form-actions mt-4">
+                                        <button type="submit" class="btn btn-primary" id="btn-save-category">
+                                            <i class="ph ph-floppy-disk"></i> 保存
+                                        </button>
+                                        <button type="button" class="btn btn-ghost" id="btn-cancel-category-edit" style="display:none;">キャンセル</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Category List -->
+                            <div class="admin-card">
+                                <div class="card-header">
+                                    <h3>カテゴリ一覧</h3>
+                                    <span class="text-xs text-secondary">ドラッグ＆ドロップまたは矢印ボタンで表示順を入れ替えられます</span>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="admin-table">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 90px;">表示順</th>
+                                                <th>カテゴリ名</th>
+                                                <th>カラーバッジ</th>
+                                                <th>操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="admin-categories-table-body">
+                                            <!-- Dynamic contents -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Database Settings -->
+                    <div id="admin-settings" class="admin-tab-content">
+                        <div class="admin-card">
+                            <div class="card-header">
+                                <h3>データベース & 公開設定</h3>
+                            </div>
+                            <div class="settings-sections">
+                                <!-- Static deployment download -->
+                                <div class="settings-section">
+                                    <h4><i class="ph ph-file-arrow-down text-primary"></i> 静的公開用データ（data.json）のダウンロード</h4>
+                                    <p class="text-secondary text-sm">
+                                        本アプリをサーバー費用をかけずにGitHub PagesやNetlifyなどでネット公開する場合に使用します。<br>
+                                        ローカル環境で動画の追加・編集を行った後、以下のボタンから最新データをダウンロードし、プロジェクトフォルダ内の `data.json` と差し替えて公開（デプロイ）してください。
+                                    </p>
+                                    <button class="btn btn-primary mt-2" id="btn-download-db">
+                                        <i class="ph ph-download"></i> data.json をダウンロード
+                                    </button>
+                                </div>
+
+                                <div class="settings-section mt-4">
+                                    <h4><i class="ph ph-file-arrow-up text-primary"></i> データのインポート</h4>
+                                    <p class="text-secondary text-sm">
+                                        バックアップした `data.json` ファイル、またはダウンロードしたデータを本ブラウザの `localStorage` にインポートして上書きします。
+                                    </p>
+                                    <div class="input-with-btn mt-2">
+                                        <input type="file" id="import-db-file" accept=".json" class="form-control" style="padding: 6px 12px;">
+                                        <button type="button" class="btn btn-secondary" id="btn-import-db">
+                                            <i class="ph ph-upload-simple"></i> インポート実行
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Cloud Database (Supabase) Setup -->
+                                <div class="settings-section mt-4">
+                                    <h4><i class="ph ph-cloud-lightning text-primary"></i> クラウドデータベース連携 (Supabase)</h4>
+                                    <p class="text-secondary text-sm">
+                                        Supabaseと連携することで、ネット上で直接管理画面からリアルタイム編集が可能になります（無料プラン利用可能）。<br>
+                                        連携するには、Supabaseプロジェクトを作成し、動画保存用のテーブル（`videos` および `categories`）を作成後、接続キーを入力してください。
+                                    </p>
+                                    <form id="supabase-config-form" class="admin-form mt-2">
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label class="form-label" for="supabase-url">Supabase API URL</label>
+                                                <input type="url" id="supabase-url" class="form-control" placeholder="https://xxxx.supabase.co">
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-label" for="supabase-key">Supabase Anon Key</label>
+                                                <input type="password" id="supabase-key" class="form-control" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+                                            </div>
+                                        </div>
+                                        <div class="form-actions">
+                                            <button type="submit" class="btn btn-primary" id="btn-save-supabase">
+                                                <i class="ph ph-plugs"></i> 接続設定を保存して有効化
+                                             </button>
+                                             <button type="button" class="btn btn-ghost" id="btn-disconnect-supabase" style="display:none;">接続解除</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Video Detail Modal (Shows metadata and Notes) -->
+    <div class="modal-overlay" id="video-detail-modal">
+        <div class="modal-container">
+            <button class="modal-close"><i class="ph ph-x"></i></button>
+            <div class="modal-content">
+                <div class="modal-banner" id="modal-banner-img" style="background-image: url('');">
+                    <div class="modal-banner-overlay">
+                        <button class="btn btn-primary btn-lg" id="modal-play-btn">
+                            <i class="ph-fill ph-play"></i> YouTubeで動画を再生する
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-body-info">
+                    <div class="modal-header-section">
+                        <span class="category-badge" id="modal-video-category">練習試合</span>
+                        <h2 id="modal-video-title" class="mt-1">秋季リーグ 決勝戦 vs 東西高校</h2>
+                    </div>
+                    
+                    <div class="info-grid mt-4">
+                        <div class="info-item">
+                            <span class="info-label"><i class="ph ph-calendar"></i> 日付</span>
+                            <span class="info-val" id="modal-video-date">2026.07.19</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label"><i class="ph ph-users"></i> 対戦相手</span>
+                            <span class="info-val" id="modal-video-opponent">東西高校</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label"><i class="ph ph-map-pin"></i> 場所</span>
+                            <span class="info-val" id="modal-video-location">メイン体育館</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label"><i class="ph ph-link"></i> YouTube URL</span>
+                            <span class="info-val"><a href="#" target="_blank" id="modal-video-url" class="text-primary truncate">https://youtube.com/watch?v=...</a></span>
+                        </div>
+                    </div>
+
+                    <div class="modal-notes-section mt-4">
+                        <h3><i class="ph ph-notepad"></i> 備考・メモ</h3>
+                        <div class="notes-content" id="modal-video-notes">
+                            備考は登録されていません。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Edit Modal (Admin inline editing) -->
+    <div class="modal-overlay" id="video-edit-modal">
+        <div class="modal-container">
+            <button class="modal-close"><i class="ph ph-x"></i></button>
+            <div class="modal-content" style="padding: 24px;">
+                <h3>動画情報の編集</h3>
+                <form id="edit-video-form" class="admin-form mt-2">
+                    <input type="hidden" id="edit-video-id">
+                    <div class="form-group">
+                        <label class="form-label" for="edit-video-url">YouTube URL <span class="required">*</span></label>
+                        <div class="input-with-btn">
+                            <input type="url" id="edit-video-url" class="form-control" required>
+                            <button type="button" class="btn btn-secondary" id="edit-btn-fetch-meta">
+                                <i class="ph ph-download-simple"></i> 再取得
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="edit-video-title">タイトル <span class="required">*</span></label>
+                            <input type="text" id="edit-video-title" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="edit-video-category">カテゴリ <span class="required">*</span></label>
+                            <select id="edit-video-category" class="form-control" required>
+                                <!-- Dynamic -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="edit-video-date">日付 <span class="required">*</span></label>
+                            <input type="date" id="edit-video-date" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="edit-video-opponent">対戦相手</label>
+                            <input type="text" id="edit-video-opponent" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="edit-video-location">場所</label>
+                            <input type="text" id="edit-video-location" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="edit-video-thumbnail-url">サムネイル画像URL</label>
+                            <input type="url" id="edit-video-thumbnail-url" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="edit-video-notes">備考・メモ</label>
+                        <textarea id="edit-video-notes" class="form-control" rows="4"></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ph ph-floppy-disk"></i> 変更を保存
+                        </button>
+                        <button type="button" class="btn btn-ghost modal-close-btn">キャンセル</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script -->
+    <script src="script.js"></script>
+</body>
+</html>
