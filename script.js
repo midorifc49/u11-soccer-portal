@@ -19,7 +19,9 @@ let state = {
     },
     activeCategoryFilter: 'all',
     searchQuery: '',
-    sortBy: 'date-desc'
+    sortBy: 'date-desc',
+    calendarYear: null,
+    calendarMonth: null
 };
 
 // Default Seed Data
@@ -648,6 +650,8 @@ const ui = {
                     }
                     
                     state.videos.unshift(newVideo);
+                    state.calendarYear = null;
+                    state.calendarMonth = null;
                     dataStore.saveLocal();
                     
                     addVideoForm.reset();
@@ -1015,38 +1019,238 @@ const ui = {
         }
         
         heroSection.style.display = 'block';
-        const latestVideo = state.videos[0]; // First video is always the highlight
-        const cat = state.categories.find(c => c.id === latestVideo.categoryId) || { name: 'その他', color: 'slate' };
-        
-        heroSection.innerHTML = `
-            <div class="hero-bg-blur" style="background-image: url('${latestVideo.thumbnail}')"></div>
-            <div class="hero-content">
-                <div class="hero-info">
-                    <span class="hero-badge"><i class="ph-fill ph-sparkle animate-pulse"></i> 最新のアーカイブ</span>
-                    <h2 class="hero-title">${latestVideo.title}</h2>
-                    <div class="hero-meta">
-                        <span class="hero-meta-item"><i class="ph ph-calendar"></i> ${latestVideo.date}</span>
-                        <span class="hero-meta-item"><i class="ph ph-users"></i> ${latestVideo.opponent}</span>
-                        <span class="hero-meta-item"><i class="ph ph-map-pin"></i> ${latestVideo.location}</span>
-                        <span class="category-badge badge-${cat.color}">${cat.name}</span>
-                    </div>
-                    <div class="hero-actions" style="display: flex; flex-wrap: wrap; gap: 10px;">
-                        <button class="btn btn-primary btn-lg" onclick="playYouTubeVideo('${latestVideo.url}')">
-                            <i class="ph-fill ph-play"></i> YouTubeで再生する
+
+        // Sort videos by date descending (preserving array order for same-day videos)
+        const sortedForUpdates = [...state.videos].sort((a, b) => {
+            const dateA = a.date ? new Date(a.date).getTime() : 0;
+            const dateB = b.date ? new Date(b.date).getTime() : 0;
+            return dateB - dateA;
+        });
+
+        const latestVideo = sortedForUpdates[0];
+        const recentVideos = sortedForUpdates.slice(0, 20);
+
+        // Initialize calendarYear / calendarMonth to the latest video's month if not yet set
+        if (state.calendarYear === null || state.calendarMonth === null) {
+            const initDate = latestVideo && latestVideo.date ? new Date(latestVideo.date) : new Date();
+            if (!isNaN(initDate.getTime())) {
+                state.calendarYear = initDate.getFullYear();
+                state.calendarMonth = initDate.getMonth(); // 0-indexed
+            } else {
+                const now = new Date();
+                state.calendarYear = now.getFullYear();
+                state.calendarMonth = now.getMonth();
+            }
+        }
+
+        const updatesListHtml = recentVideos.map(v => {
+            const cat = state.categories.find(c => c.id === v.categoryId) || { name: 'その他', color: 'slate' };
+            return `
+                <div class="hero-update-item" onclick="playYouTubeVideo('${v.url}')" title="クリックしてYouTubeで再生">
+                    <span class="update-item-date">${v.date || ''}</span>
+                    <span class="category-badge badge-${cat.color} update-item-cat">${cat.name}</span>
+                    <span class="update-item-title">${v.title}</span>
+                    <div class="update-item-actions">
+                        <button type="button" class="update-action-btn play" onclick="event.stopPropagation(); playYouTubeVideo('${v.url}')" title="YouTubeで再生">
+                            <i class="ph-fill ph-play"></i>
                         </button>
-                        <button class="btn btn-secondary btn-lg" onclick="ui.openDetailModal('${latestVideo.id}')">
-                            <i class="ph ph-info"></i> 詳細を見る
+                        <button type="button" class="update-action-btn info" onclick="event.stopPropagation(); ui.openDetailModal('${v.id}')" title="詳細を見る">
+                            <i class="ph ph-info"></i>
                         </button>
                     </div>
                 </div>
-                <div class="hero-thumbnail-wrapper" onclick="playYouTubeVideo('${latestVideo.url}')">
-                    <img src="${latestVideo.thumbnail}" alt="${latestVideo.title}">
-                    <div class="hero-play-overlay">
-                        <div class="hero-play-btn"><i class="ph-fill ph-play" style="margin-left: 5px;"></i></div>
+            `;
+        }).join('');
+
+        const calendarHtml = this.buildCalendarHtml(state.calendarYear, state.calendarMonth);
+
+        heroSection.innerHTML = `
+            <div class="hero-bg-blur" style="background-image: url('${latestVideo.thumbnail}')"></div>
+            <div class="hero-dashboard">
+                <div class="hero-updates-panel">
+                    <div class="hero-panel-header">
+                        <span class="hero-badge" style="margin-bottom: 0;"><i class="ph-fill ph-clock-counter-clockwise"></i> 更新履歴・新着アーカイブ</span>
+                        <span class="text-xs text-secondary">最新${recentVideos.length}件（クリックで再生）</span>
                     </div>
+                    <div class="hero-updates-list">
+                        ${updatesListHtml}
+                    </div>
+                </div>
+                <div class="hero-calendar-panel" id="hero-calendar-panel">
+                    ${calendarHtml}
                 </div>
             </div>
         `;
+    },
+
+    buildCalendarHtml(year, month) {
+        // Count videos per YYYY-MM-DD
+        const dateCounts = {};
+        state.videos.forEach(v => {
+            if (v.date) {
+                dateCounts[v.date] = (dateCounts[v.date] || 0) + 1;
+            }
+        });
+
+        const firstDay = new Date(year, month, 1).getDay(); // 0 (Sun) to 6 (Sat)
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+
+        let cellsHtml = weekdays.map((w, i) => {
+            const cls = i === 0 ? 'cal-weekday sun' : (i === 6 ? 'cal-weekday sat' : 'cal-weekday');
+            return `<div class="${cls}">${w}</div>`;
+        }).join('');
+
+        // Blank cells before 1st of month
+        for (let i = 0; i < firstDay; i++) {
+            cellsHtml += `<div class="cal-day empty"></div>`;
+        }
+
+        const pad = (n) => String(n).padStart(2, '0');
+        const monthPrefix = `${year}-${pad(month + 1)}`;
+        let monthVideoTotal = 0;
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${monthPrefix}-${pad(d)}`;
+            const count = dateCounts[dateStr] || 0;
+            monthVideoTotal += count;
+            const dayOfWeek = (firstDay + d - 1) % 7;
+            const dowClass = dayOfWeek === 0 ? 'sun' : (dayOfWeek === 6 ? 'sat' : '');
+
+            if (count > 0) {
+                cellsHtml += `
+                    <button type="button" class="cal-day has-video ${dowClass}" onclick="ui.openCalendarDateModal('${dateStr}')" title="${dateStr} (${count}件の動画)">
+                        <span class="cal-day-circle">${d}</span>
+                        <span class="cal-day-dot">${count}</span>
+                    </button>
+                `;
+            } else {
+                cellsHtml += `
+                    <div class="cal-day ${dowClass}">
+                        <span class="cal-day-num">${d}</span>
+                    </div>
+                `;
+            }
+        }
+
+        return `
+            <div class="cal-header">
+                <button type="button" class="cal-nav-btn" onclick="ui.changeCalendarMonth(-1)" title="前月">
+                    <i class="ph ph-caret-left"></i>
+                </button>
+                <div class="cal-title-wrap">
+                    <span class="cal-title">${year}年 ${month + 1}月</span>
+                    <span class="cal-subtitle">${monthVideoTotal > 0 ? `${monthVideoTotal}件の試合動画` : '動画なし'}</span>
+                </div>
+                <button type="button" class="cal-nav-btn" onclick="ui.changeCalendarMonth(1)" title="次月">
+                    <i class="ph ph-caret-right"></i>
+                </button>
+            </div>
+            <div class="cal-grid">
+                ${cellsHtml}
+            </div>
+            <div class="cal-legend">
+                <span class="cal-legend-item"><span class="cal-legend-circle"></span> 丸印の日付をタップすると動画一覧を表示</span>
+            </div>
+        `;
+    },
+
+    changeCalendarMonth(delta) {
+        if (state.calendarYear === null || state.calendarMonth === null) {
+            const now = new Date();
+            state.calendarYear = now.getFullYear();
+            state.calendarMonth = now.getMonth();
+        }
+        let newMonth = state.calendarMonth + delta;
+        let newYear = state.calendarYear;
+        if (newMonth < 0) {
+            newMonth = 11;
+            newYear--;
+        } else if (newMonth > 11) {
+            newMonth = 0;
+            newYear++;
+        }
+        state.calendarYear = newYear;
+        state.calendarMonth = newMonth;
+
+        const calPanel = document.getElementById('hero-calendar-panel');
+        if (calPanel) {
+            calPanel.innerHTML = this.buildCalendarHtml(newYear, newMonth);
+        }
+    },
+
+    openCalendarDateModal(dateStr) {
+        const videosOnDate = state.videos.filter(v => v.date === dateStr);
+        if (videosOnDate.length === 0) return;
+
+        let modal = document.getElementById('calendar-date-modal');
+        if (!modal) {
+            // Fallback dynamic modal creation if index.html wasn't updated
+            modal = document.createElement('div');
+            modal.id = 'calendar-date-modal';
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-container" style="max-width: 600px;">
+                    <button class="modal-close" onclick="document.getElementById('calendar-date-modal').classList.remove('active')"><i class="ph ph-x"></i></button>
+                    <div class="modal-content" style="padding: 24px;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding-right: 36px;">
+                            <i class="ph-fill ph-calendar-check text-primary" style="font-size: 1.5rem;"></i>
+                            <div>
+                                <h3 id="calendar-modal-title" style="font-size: 1.15rem; line-height: 1.2;"></h3>
+                                <p id="calendar-modal-subtitle" class="text-xs text-secondary" style="margin-top: 2px;"></p>
+                            </div>
+                        </div>
+                        <div id="calendar-modal-list" class="calendar-modal-list"></div>
+                    </div>
+                </div>
+            `;
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.classList.remove('active');
+            });
+            document.body.appendChild(modal);
+        }
+
+        const titleEl = document.getElementById('calendar-modal-title');
+        const subtitleEl = document.getElementById('calendar-modal-subtitle');
+        const listEl = document.getElementById('calendar-modal-list');
+
+        if (titleEl) titleEl.textContent = `${dateStr} のアーカイブ動画 (${videosOnDate.length}件)`;
+        if (subtitleEl) {
+            const firstWithMeta = videosOnDate.find(v => v.location && v.location !== '設定なし');
+            subtitleEl.textContent = firstWithMeta ? `会場: ${firstWithMeta.location}` : 'クリックしてYouTube再生または詳細を表示';
+        }
+
+        if (listEl) {
+            listEl.innerHTML = videosOnDate.map(v => {
+                const cat = state.categories.find(c => c.id === v.categoryId) || { name: 'その他', color: 'slate' };
+                const opponentText = (v.opponent && v.opponent !== '設定なし') ? `<span class="text-xs text-secondary"><i class="ph ph-users"></i> ${v.opponent}</span>` : '';
+                return `
+                    <div class="calendar-video-item">
+                        <div class="calendar-video-thumb" onclick="playYouTubeVideo('${v.url}')">
+                            <img src="${v.thumbnail}" alt="${v.title}" loading="lazy">
+                            <div class="calendar-video-play"><i class="ph-fill ph-play"></i></div>
+                        </div>
+                        <div class="calendar-video-info">
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <span class="category-badge badge-${cat.color}" style="font-size: 0.7rem; padding: 2px 8px;">${cat.name}</span>
+                                ${opponentText}
+                            </div>
+                            <div class="calendar-video-title" onclick="playYouTubeVideo('${v.url}')">${v.title}</div>
+                        </div>
+                        <div class="calendar-video-actions">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="playYouTubeVideo('${v.url}')">
+                                <i class="ph-fill ph-play"></i> 再生
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('calendar-date-modal').classList.remove('active'); ui.openDetailModal('${v.id}')">
+                                <i class="ph ph-info"></i> 詳細
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        modal.classList.add('active');
     },
     
     renderPortalVideos() {
