@@ -48,6 +48,54 @@
   ],
   "videos": [
     {
+      "id": "vid-1795263867773",
+      "title": "対ドンキーコング後半",
+      "url": "https://youtu.be/ViaY6RR_bgA?si=-IVtO-lpFOaqB9_r",
+      "youtubeId": "ViaY6RR_bgA",
+      "thumbnail": "https://i.ytimg.com/vi/ViaY6RR_bgA/hqdefault.jpg",
+      "date": "2026-11-21",
+      "opponent": "ドンキーコング",
+      "location": "小金井市立東小学校",
+      "notes": "",
+      "categoryId": "cat-7"
+    },
+    {
+      "id": "vid-1795263834577",
+      "title": "対ドンキーコング前半",
+      "url": "https://youtu.be/13spazvINOw?si=rNsOyueFSqP-1HOS",
+      "youtubeId": "13spazvINOw",
+      "thumbnail": "https://i.ytimg.com/vi/13spazvINOw/hqdefault.jpg",
+      "date": "2026-11-21",
+      "opponent": "ドンキーコング",
+      "location": "小金井市立東小学校",
+      "notes": "",
+      "categoryId": "cat-7"
+    },
+    {
+      "id": "vid-1795263796479",
+      "title": "対EFCロケッツ後半",
+      "url": "https://youtu.be/OY_3bO5NraQ?si=Eqq4CQ1Xg9Bveuyg",
+      "youtubeId": "OY_3bO5NraQ",
+      "thumbnail": "https://i.ytimg.com/vi/OY_3bO5NraQ/hqdefault.jpg",
+      "date": "2026-11-21",
+      "opponent": "EFCロケッツ",
+      "location": "小金井市立東小学校",
+      "notes": "",
+      "categoryId": "cat-7"
+    },
+    {
+      "id": "vid-1795263694059",
+      "title": "対EFCロケッツ前半",
+      "url": "https://youtu.be/JhCwBZTHmnA?si=hW0bXSN538ZC4zie",
+      "youtubeId": "JhCwBZTHmnA",
+      "thumbnail": "https://i.ytimg.com/vi/JhCwBZTHmnA/hqdefault.jpg",
+      "date": "2026-11-21",
+      "opponent": "EFCロケッツ",
+      "location": "小金井市立東小学校",
+      "notes": "",
+      "categoryId": "cat-7"
+    },
+    {
       "id": "vid-83",
       "title": "対FC前原ブルー後半",
       "url": "https://youtu.be/PmAhob4GIqQ?si=O5SRqQT3Si8atqYY",
